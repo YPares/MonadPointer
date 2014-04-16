@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, ConstraintKinds #-}
+{-# LANGUAGE DataKinds, ConstraintKinds, TypeFamilies #-}
 
 module Control.Monad.Pointer where
 
