@@ -73,6 +73,8 @@ test = do x <- mpoint $ helper 42
           return (show $ (x::Double) + fromIntegral (y::Int))
 ```
 
+(yep, GitHub markdown doesn't like the type list)
+
 Here you say that m will have to contain a StateT Int and a State
 Double, in whatever order and possibly with other transformers between
 them. I'll try to add a MTList equivalent that will enforce an order between
