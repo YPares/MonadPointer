@@ -6,7 +6,7 @@ MonadPointer aims at helping you
 - write functions that target a specific monad transformer of some stack without using mtl typeclasses;
 - run those functions against a stack without having to count the number of lifts to do. Just call mpoint and let the swathe of GHC type extensions work for you.
 
-It may require a bit of extra type hints, though.
+Note it's quite rough for now and requires extra type hinting.
 
 The idea is that functions like
 ```haskell
@@ -39,7 +39,7 @@ where the type is simply an alias for:
 readerAct :: (Monad m, Applicative m) => Int -> Int -> ReaderT Int m String
 ```
 
-So you are explicitely saying that your function needs a ReaderT Int behavior but can run in any monad stack provided it contains a ReaderT Int somewhere. (You actually say the same than with MTL, only without the need to introduce).
+So you are explicitely saying that your function needs a ReaderT Int behavior but can run whatever the monad beneath the ReaderT Int. (close to what you would do with mtl with MonadReader).
 
 However, what if your final monad stack looks like:
 
@@ -51,18 +51,18 @@ Then your ReaderT Int is pushed deep down the stack, and you have to insert 3 li
 
 ```haskell
 fn = do count <- lift (lift (lift readerAct))
-        lift (lift (tell count)) -- we log the number logged so far.
+        lift (lift (tell count))
 ```
 
 It is a bit ugly, and everytime you want to execute one action in your stack, you have to look at it to count the number of lifts you should insert. Cumbersome. MonadPointer allows you do just replace whatever amount of lifts by:
 
 ```haskell
 fn = do count <- mpoint readerAct
-        mpoint (tell count) -- we log the number logged so far.
+        mpoint (tell count)
 ```
 
 If now you want to make an action the requires _some_ monad
-transformers to be reachable, yet without specifying the full stack,
+transformers to be reachable, yet without being tied to a specific stack,
 you can use MTSet:
 
 ```haskell
@@ -73,11 +73,15 @@ test = do x <- mpoint $ helper 42
           return (show $ (x::Double) + fromIntegral (y::Int))
 ```
 
+(yep, GitHub markdown doesn't like the type list)
+
 Here you say that m will have to contain a StateT Int and a State
 Double, in whatever order and possibly with other transformers between
 them. I'll try to add a MTList equivalent that will enforce an order between
 the transformers.
 Note MTSet requires UndecidableInstances for now.
+
+As you can see, you cannot really do without type hints, because of OverlappingInstances. But I still find it clearer than explicit lift (lift (lift ...))).
 
 And if you _really_ can't stand the boilerplate introduced by mpoint, you may simply declare polymorphic variants of your stack-accessing functions:
 
@@ -92,7 +96,7 @@ tell' :: (PointableIn m (WriterT w)) => w -> m ()
 tell' x = mpoint (tell x)
 ```
 
-(types are necessary, because of OverlappingInstances) And then you get fully polymorphic accessors without having to write a single class (PointableIn, the class behind mpoint, is generic enough). And you can then rewrite the code as:
+And then you get fully polymorphic accessors without having to write a single class (PointableIn, the class behind mpoint, is generic enough). And you can then rewrite the code as:
 
 ```haskell
 readerAct x y = do z <- ask'
