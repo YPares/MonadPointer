@@ -28,7 +28,7 @@ It allows readerAct to be use with a monad transformer, but it needs to introduc
 My idea was to stay with the defined types of the transformers package, and to ensure composability, _always_ use the transformer versions. This goes:
 
 ```haskell
-readerAct :: Int -> Int -> At (ReaderT Int) String
+readerAct :: (MA m) => Int -> Int -> ReaderT Int m String
 readerAct x y = do z <- ask
                 return (show (x+y+z))
 ```
@@ -36,7 +36,7 @@ readerAct x y = do z <- ask
 where the type is simply an alias for:
 
 ```haskell
-readerAct :: (Monad m) => Int -> Int -> ReaderT Int m String
+readerAct :: (Monad m, Applicative m) => Int -> Int -> ReaderT Int m String
 ```
 
 So you are explicitely saying that your function needs a ReaderT Int behavior but can run in any monad stack provided it contains a ReaderT Int somewhere. (You actually say the same than with MTL, only without the need to introduce).
@@ -64,13 +64,17 @@ fn = do count <- mpoint readerAct
 And if you _really_ can't stand the boilerplate introduced by mpoint, you may simply declare polymorphic variants of your stack-accessing functions:
 
 ```haskell
-get' = mpoint get
-put' = mpoint . put
+ask' :: (PointableIn m (ReaderT r)) => m r
 ask' = mpoint ask
-tell' = mpoint . tell
+
+put' :: (PointableIn m (StateT s)) => s -> m ()
+put' x = mpoint (put x)
+
+tell' :: (PointableIn m (WriterT w)) => w -> m ()
+tell' x = mpoint (tell x)
 ```
 
-And then you get fully polymorphic accessors without having to write a single class (PointableIn, the class behind mpoint, is generic enough). And you can then rewrite the code as:
+(types are necessary, because of OverlappingInstances) And then you get fully polymorphic accessors without having to write a single class (PointableIn, the class behind mpoint, is generic enough). And you can then rewrite the code as:
 
 ```haskell
 readerAct x y = do z <- ask'

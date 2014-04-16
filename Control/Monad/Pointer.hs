@@ -56,8 +56,9 @@ instance (PointableIn stackrest mt2, MonadTrans mt1,
   {-# INLINE mpoint #-}
   mpoint action = lift (mpoint action)
 
-type At mt a = (Functor m, Applicative m, Monad m) => mt m a
--- ^ Prevents sharing of the m type!
+type MA m = (Monad m, Applicative m)
+-- ^ Just an alias until GHC 7.10 comes out & Applicative becomes a
+-- superclass of Monad
 
 
 type family MTSetGetConstraints
@@ -76,7 +77,13 @@ test = do x <- mpoint $ helper 42
           liftIO $ print x
           return (show (x::Double))
 
-helper :: (Num t) => t -> At (ReaderT t) t
+ask' :: (PointableIn m (ReaderT r)) => m r
+ask' = mpoint ask
+
+put' :: (PointableIn m (StateT s)) => s -> m ()
+put' x = mpoint (put x)
+
+helper :: (Num t, MA m) => t -> ReaderT t m t
 helper x = (*x) <$> ask
 
 x :: IO (String, Int)
