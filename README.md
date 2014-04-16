@@ -6,7 +6,7 @@ MonadPointer aims at helping you
 - write functions that target a specific monad transformer of some stack without using mtl typeclasses;
 - run those functions against a stack without having to count the number of lifts to do. Just call mpoint and let the swathe of GHC type extensions work for you.
 
-It may require a bit of extra type hints, though.
+Note it's quite rough for now and requires extra type hinting.
 
 The idea is that functions like
 ```haskell
@@ -81,6 +81,8 @@ them. I'll try to add a MTList equivalent that will enforce an order between
 the transformers.
 Note MTSet requires UndecidableInstances for now.
 
+As you can see, you cannot really do without type hints, because of OverlappingInstances. But I still find it clearer than explicit lift (lift (lift ...))).
+
 And if you _really_ can't stand the boilerplate introduced by mpoint, you may simply declare polymorphic variants of your stack-accessing functions:
 
 ```haskell
@@ -94,7 +96,7 @@ tell' :: (PointableIn m (WriterT w)) => w -> m ()
 tell' x = mpoint (tell x)
 ```
 
-(types are necessary, because of OverlappingInstances) And then you get fully polymorphic accessors without having to write a single class (PointableIn, the class behind mpoint, is generic enough). And you can then rewrite the code as:
+And then you get fully polymorphic accessors without having to write a single class (PointableIn, the class behind mpoint, is generic enough). And you can then rewrite the code as:
 
 ```haskell
 readerAct x y = do z <- ask'
