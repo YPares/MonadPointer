@@ -8,23 +8,76 @@ In the pure spirit of transformers, MonadPointer empowers the user to
 
 It may require a bit of extra type hints, though.
 
-
+The idea is that functions like
 ```haskell
-test :: (StateT Int (ReaderT Double (ReaderT Double IO))) String
-test = do x <- mpoint $ helper 42
-          liftIO $ print x
-          return (show (x::Double))  -- type necessary, or else GHC wouldn't know which istance of show to call
-          
-
-helper :: (Num t) => t -> At (ReaderT t) t  -- At is just an alias to save some Constraint typing
-helper x = (*x) <$> ask
-
-
---| If you run see you can see the helper is ran against the _first_ ReaderT Double of the stack.
-x = test <:: flip runStateT 3 <:: flip runReaderT 10 <:: flip runReaderT 1
-{- >> x
-   420
-   ("420",1) -}
+readerAct :: Int -> Int -> Reader Int String
+readerAct x y = do z <- ask
+                   return (show (x+y+z))
 ```
 
-(The (<::) operator is just a reversed application operator, so the order in which the transformers are ran may be read from left to right)
+Are difficult to reuse, because they force you to run in Reader. MTL came with the solution:
+
+```haskell
+readerAct :: (MonadReader Int m) => Int -> Int -> m String
+readerAct x y = do z <- ask
+                   return (show (x+y+z))
+```
+
+It allows readerAct to be use with a monad transformer, but it needs to introduce a new class per Monad, and to write an instance of each class for each Monad. So if I have 4 monads (Reader, Writer, State, Maybe), I will need to write 16 instances (that's what MTL does).
+
+My idea was to stay with the defined types of the transformers package, and to ensure composability, _always_ use the transformer versions. This goes:
+
+```haskell
+readerAct :: Int -> Int -> At (ReaderT Int) String
+readerAct x y = do z <- ask
+                return (show (x+y+z))
+```
+
+where the type is simply an alias for:
+
+```haskell
+readerAct :: (Monad m) => Int -> Int -> ReaderT Int m String
+```
+
+So you are explicitely saying that your function needs a ReaderT Int behavior but can run in any monad stack provided it contains a ReaderT Int somewhere. (You actually say the same than with MTL, only without the need to introduce).
+
+However, what if your final monad stack looks like:
+
+```haskell
+fn :: StateT MyWorld (ReaderT Configuration (WriterT String (ReaderT Int IO))) ()
+```
+
+Then your ReaderT Int is pushed deep down the stack, and you have to insert 3 lifts to execute actions in it:
+
+```haskell
+fn = do count <- lift (lift (lift readerAct))
+        lift (lift (tell count)) -- we log the number logged so far.
+```
+
+It is a bit ugly, and everytime you want to execute one action in your stack, you have to look at it to count the number of lifts you should insert. Cumbersome. MonadPointer allows you do just replace whatever amount of lifts by:
+
+```haskell
+fn = do count <- mpoint readerAct
+        mpoint (tell count) -- we log the number logged so far.
+```
+
+And if you _really_ can't stand the boilerplate introduced by mpoint, you may simply declare polymorphic variants of your stack-accessing functions:
+
+```haskell
+get' = mpoint get
+put' = mpoint put
+ask' = mpoint ask
+tell' = mpoint tell
+```
+
+And then you get fully polymorphic accessors without having to write a single class (PointedIn, the class behind mpoint, is generic enough). And you can then rewrite the code as:
+
+```haskell
+readerAct x y = do z <- ask'
+                   return (show (x+y+z))
+
+fn = do count <- readerAct
+        tell' count
+```
+
+The gotcha that remains is anyway already present in MTL: if you have twice the same monad transformer (e.g. if you have two ```ReaderT Double``` in the stack), then mpoint will address the uppermost. But I wouldn't consider good practise to have twice the same transformer, as it's not clear what each Reader is meant to be used for (you have newtypes for clarifying this).
