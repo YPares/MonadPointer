@@ -79,7 +79,6 @@ Here you say that m will have to contain a StateT Int and a State
 Double, in whatever order and possibly with other transformers between
 them. I'll try to add a MTList equivalent that will enforce an order between
 the transformers.
-Note MTSet requires UndecidableInstances for now.
 
 As you can see, you cannot really do without type hints, because of OverlappingInstances. But I still find it clearer than explicit lift (lift (lift ...))).
 
