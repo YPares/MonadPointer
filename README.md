@@ -62,7 +62,7 @@ fn = do count <- mpoint readerAct
 ```
 
 If now you want to make an action the requires _some_ monad
-transformers to be reachable, yet without specifying the full stack,
+transformers to be reachable, yet without being tied to a specific stack,
 you can use MTSet:
 
 ```haskell
