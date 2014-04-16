@@ -39,26 +39,23 @@ infixl 6 <::
 
 --class PointToBase 
 
-class (Applicative stack, Monad stack)
-  => PointableIn (stack :: * -> *) (mttarget :: (* -> *) -> * -> *) where
-  mpoint :: (forall (m :: * -> *) . (Applicative m, Monad m) => mttarget m a) -> stack a
+type MA m = (Monad m, Applicative m)
+-- ^ Just an alias until GHC 7.10 comes out & Applicative becomes a
+-- superclass of Monad
 
-instance (Applicative stackrest, Monad stackrest,
-          Applicative (mt1 stackrest), Monad (mt1 stackrest))
+class (MA stack) => PointableIn (stack :: * -> *) (mttarget :: (* -> *) -> * -> *) where
+  mpoint :: (forall (m :: * -> *) . (MA m) => mttarget m a) -> stack a
+
+instance (MA stackrest, MA (mt1 stackrest))
          => PointableIn (mt1 stackrest) mt1 where
   {-# INLINE mpoint #-}
   mpoint action = action
 
 instance (PointableIn stackrest mt2, MonadTrans mt1,
-          Applicative stackrest, Monad stackrest,
-          Applicative (mt1 stackrest), Monad (mt1 stackrest))
+          MA stackrest, MA (mt1 stackrest))
          => PointableIn (mt1 stackrest) mt2 where
   {-# INLINE mpoint #-}
   mpoint action = lift (mpoint action)
-
-type MA m = (Monad m, Applicative m)
--- ^ Just an alias until GHC 7.10 comes out & Applicative becomes a
--- superclass of Monad
 
 
 type family MTSetGetConstraints
@@ -69,7 +66,7 @@ type family MTSetGetConstraints
   MTSetGetConstraints cst stack '[] = cst
 
 type MTSet (l :: [(* -> *) -> * -> *]) (stack :: * -> *) =
-  (Applicative stack, Monad stack, MTSetGetConstraints () stack l)
+  (MA stack, MTSetGetConstraints () stack l)
 
 
 test :: (MTSet '[StateT Int, ReaderT Double] m, MonadIO m) => m String
