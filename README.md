@@ -20,7 +20,10 @@ helper :: (Num t) => t -> At (ReaderT t) t  -- At is just an alias to save some 
 helper x = (*x) <$> ask
 
 
+--| If you run see you can see the helper is ran against the _first_ ReaderT Double of the stack.
 x = test <:: flip runStateT 3 <:: flip runReaderT 10 <:: flip runReaderT 1
+{- 420
+   >> ("420",1) -}
 ```
 
 (The (<::) operator is just a reversed application operator, so the order in which the transformers are ran may be read from left to right)
