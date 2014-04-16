@@ -61,6 +61,24 @@ fn = do count <- mpoint readerAct
         mpoint (tell count) -- we log the number logged so far.
 ```
 
+If now you want to make an action the requires _some_ monad
+transformers to be reachable, yet without specifying the full stack,
+you can use MTSet:
+
+```haskell
+test :: (MTSet '[StateT Int, ReaderT Double] m, MonadIO m) => m String
+test = do x <- mpoint $ helper 42
+          y <- mpoint get
+          liftIO $ print x
+          return (show $ (x::Double) + fromIntegral (y::Int))
+```
+
+Here you say that m will have to contain a StateT Int and a State
+Double, in whatever order and possibly with other transformers between
+them. I'll try to add a MTList equivalent that will enforce an order between
+the transformers.
+Note MTSet requires UndecidableInstances for now.
+
 And if you _really_ can't stand the boilerplate introduced by mpoint, you may simply declare polymorphic variants of your stack-accessing functions:
 
 ```haskell

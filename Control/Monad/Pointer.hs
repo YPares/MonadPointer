@@ -74,8 +74,9 @@ type MTSet (l :: [(* -> *) -> * -> *]) (stack :: * -> *) =
 
 test :: (MTSet '[StateT Int, ReaderT Double] m, MonadIO m) => m String
 test = do x <- mpoint $ helper 42
+          y <- mpoint get
           liftIO $ print x
-          return (show (x::Double))
+          return (show $ (x::Double) + fromIntegral (y::Int))
 
 ask' :: (PointableIn m (ReaderT r)) => m r
 ask' = mpoint ask
