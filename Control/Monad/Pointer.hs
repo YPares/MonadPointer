@@ -39,19 +39,19 @@ infixl 6 <::
 
 --class PointToBase 
 
-class (Functor stack, Applicative stack, Monad stack)
+class (Applicative stack, Monad stack)
   => PointableIn (stack :: * -> *) (mttarget :: (* -> *) -> * -> *) where
-  mpoint :: (forall (m :: * -> *) . (Functor m, Applicative m, Monad m) => mttarget m a) -> stack a
+  mpoint :: (forall (m :: * -> *) . (Applicative m, Monad m) => mttarget m a) -> stack a
 
-instance (Functor stackrest, Applicative stackrest, Monad stackrest,
-          Functor (mt1 stackrest), Applicative (mt1 stackrest), Monad (mt1 stackrest))
+instance (Applicative stackrest, Monad stackrest,
+          Applicative (mt1 stackrest), Monad (mt1 stackrest))
          => PointableIn (mt1 stackrest) mt1 where
   {-# INLINE mpoint #-}
   mpoint action = action
 
 instance (PointableIn stackrest mt2, MonadTrans mt1,
-          Functor stackrest, Applicative stackrest, Monad stackrest,
-          Functor (mt1 stackrest), Applicative (mt1 stackrest), Monad (mt1 stackrest))
+          Applicative stackrest, Monad stackrest,
+          Applicative (mt1 stackrest), Monad (mt1 stackrest))
          => PointableIn (mt1 stackrest) mt2 where
   {-# INLINE mpoint #-}
   mpoint action = lift (mpoint action)
@@ -69,7 +69,7 @@ type family MTSetGetConstraints
   MTSetGetConstraints cst stack '[] = cst
 
 type MTSet (l :: [(* -> *) -> * -> *]) (stack :: * -> *) =
-  (Functor stack, Applicative stack, Monad stack, MTSetGetConstraints () stack l)
+  (Applicative stack, Monad stack, MTSetGetConstraints () stack l)
 
 
 test :: (MTSet '[StateT Int, ReaderT Double] m, MonadIO m) => m String
