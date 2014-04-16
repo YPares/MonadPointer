@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeOperators, KindSignatures, Rank2Types, FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE MultiParamTypeClasses, PolyKinds #-}
 {-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE TypeFamilies, DataKinds, ConstraintKinds, UndecidableInstances #-}
 
@@ -43,15 +43,39 @@ type MA m = (Monad m, Applicative m)
 -- ^ Just an alias until GHC 7.10 comes out & Applicative becomes a
 -- superclass of Monad
 
-class (MA stack) => PointableIn (stack :: * -> *) (mttarget :: (* -> *) -> * -> *) where
+type family StackToList (stack :: * -> *) where
+  StackToList (mt1 stackrest) = mt1 ': StackToList stackrest
+  StackToList lastmonad = '[]
+
+type family (:&&) (a :: Bool) (b :: Bool) :: Bool where
+  True :&& True = True
+  _a   :&& _b   = False
+
+type family Not (a :: Bool) :: Bool where
+  Not True = False
+  Not False = True
+
+type family MemberOf (l :: [k]) (x :: k) :: Bool where
+  MemberOf '[] _x = False
+  MemberOf (x ': _xs) x = True
+  MemberOf (_y ': xs) x = MemberOf xs x
+
+type family AllDifferent (l :: [k]) :: Bool where
+  AllDifferent '[] = True
+  AllDifferent (x ': rest) = Not (MemberOf rest x) :&& AllDifferent rest
+
+type FreeFromDuplicates (stack :: * -> *) = AllDifferent (StackToList stack) ~ True
+
+class (MA stack, FreeFromDuplicates stack)
+      => PointableIn (stack :: * -> *) (mttarget :: (* -> *) -> * -> *) where
   mpoint :: (forall (m :: * -> *) . (MA m) => mttarget m a) -> stack a
 
-instance (MA stackrest, MA (mt1 stackrest))
+instance (FreeFromDuplicates (mt1 stackrest), MA stackrest, MA (mt1 stackrest))
          => PointableIn (mt1 stackrest) mt1 where
   {-# INLINE mpoint #-}
   mpoint action = action
 
-instance (PointableIn stackrest mt2, MonadTrans mt1,
+instance (FreeFromDuplicates (mt1 stackrest), PointableIn stackrest mt2, MonadTrans mt1,
           MA stackrest, MA (mt1 stackrest))
          => PointableIn (mt1 stackrest) mt2 where
   {-# INLINE mpoint #-}
@@ -75,14 +99,8 @@ test = do x <- mpoint $ helper 42
           liftIO $ print x
           return (show $ (x::Double) + fromIntegral (y::Int))
 
-ask' :: (PointableIn m (ReaderT r)) => m r
-ask' = mpoint ask
-
-put' :: (PointableIn m (StateT s)) => s -> m ()
-put' x = mpoint (put x)
-
 helper :: (Num t, MA m) => t -> ReaderT t m t
 helper x = (*x) <$> ask
 
 x :: IO (String, Int)
-x = test <:: flip runStateT (3::Int) <:: flip runReaderT (10::Double) <:: flip runReaderT (1::Double)
+x = test <:: flip runStateT (3::Int) <:: flip runReaderT (10::Double) <:: flip runReaderT (1::Int)
