@@ -23,4 +23,4 @@ helper x = (*x) <$> ask
 x = test <:: flip runStateT 3 <:: flip runReaderT 10 <:: flip runReaderT 1
 ```
 
-(The (<::) operator is just a reversed application operator, so the order in which the transformers is ran is read from left to right)
+(The (<::) operator is just a reversed application operator, so the order in which the transformers are ran may be read from left to right)
