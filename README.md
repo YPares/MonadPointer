@@ -3,7 +3,7 @@ MonadPointer
 
 MonadPointer aims at helping you
 
-- write functions that target a specific monad transformer of some stack without using mtl typeclasses;
+- write functions that target a specific monad transformer of some stack without using mtl typeclasses, and without specifying the whole transformer stack;
 - run those functions against a stack without having to count the number of lifts to do. Just call mpoint and let the swathe of GHC type extensions work for you.
 
 Note it's quite rough for now and requires extra type hinting.
