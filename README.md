@@ -39,7 +39,7 @@ where the type is simply an alias for:
 readerAct :: (Monad m, Applicative m) => Int -> Int -> ReaderT Int m String
 ```
 
-So you are explicitely saying that your function needs a ReaderT Int behavior but can run in any monad stack provided it contains a ReaderT Int somewhere. (You actually say the same than with MTL, only without extra typeclasses).
+So you are explicitely saying that your function needs a ReaderT Int behavior but can run whatever the monad beneath the ReaderT Int. (close to what you would do with mtl with MonadReader).
 
 However, what if your final monad stack looks like:
 
