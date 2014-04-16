@@ -65,9 +65,9 @@ And if you _really_ can't stand the boilerplate introduced by mpoint, you may si
 
 ```haskell
 get' = mpoint get
-put' = mpoint put
+put' = mpoint . put
 ask' = mpoint ask
-tell' = mpoint tell
+tell' = mpoint . tell
 ```
 
 And then you get fully polymorphic accessors without having to write a single class (PointedIn, the class behind mpoint, is generic enough). And you can then rewrite the code as:
