@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeFamilies, TypeOperators, DataKinds, ConstraintKinds #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, RankNTypes #-}
+{-# LANGUAGE GADTs, UndecidableInstances #-}
 
 module Control.Monad.Pointer.PointableIn where
 
@@ -45,20 +46,27 @@ type family StackToList (stack :: * -> *) :: [(* -> *) -> * -> *] where
   StackToList (mt1 stackrest) = mt1 ': StackToList stackrest
   StackToList lastmonad = '[]
 
-
+-- The b bool tells if we reached the end of the recursion
 class (MA stack, ExactlyOnceIn (StackToList stack) mttarget ~ True)
-      => PointableIn (stack :: * -> *) (mttarget :: (* -> *) -> * -> *) where
+      => PointableInClass (b :: Bool) (stack :: * -> *) (mttarget :: (* -> *) -> * -> *) where
   mpoint :: (forall (m :: * -> *) . (MA m) => mttarget m a) -> stack a
 
 instance (MemberOf (StackToList stackrest) mt1 ~ False, MA stackrest, MA (mt1 stackrest))
-         => PointableIn (mt1 stackrest) mt1 where
+         => PointableInClass True (mt1 stackrest) mt1 where
   {-# INLINE mpoint #-}
   mpoint action = action
 
-instance ((mt1 == mt2) ~ False,
-          ExactlyOnceIn (StackToList (mt1 stackrest)) mt2 ~ True,
+instance (ExactlyOnceIn (StackToList (mt1 stackrest)) mt2 ~ True,
           PointableIn stackrest mt2, MonadTrans mt1,
           MA stackrest, MA (mt1 stackrest))
-         => PointableIn (mt1 stackrest) mt2 where
+         => PointableInClass False (mt1 stackrest) mt2 where
   {-# INLINE mpoint #-}
   mpoint action = lift (mpoint action)
+
+data SaneStackView (mt1 :: (* -> *) -> * -> *) (stackrest :: * -> *) (mttarget :: (* -> *) -> * -> *) where
+  SSW :: (MemberOf (StackToList stackrest) mttarget ~ False)
+         => SaneStackView mt1 stackrest mttarget
+
+type family PointableIn (stack :: * -> *) (mttarget :: (* -> *) -> * -> *) where
+  PointableIn (mt1 stackrest) mt1 = PointableInClass True (mt1 stackrest) mt1
+  PointableIn (mt1 stackrest) mt2 = PointableInClass False (mt1 stackrest) mt2
