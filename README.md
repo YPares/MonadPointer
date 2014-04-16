@@ -70,7 +70,7 @@ ask' = mpoint ask
 tell' = mpoint . tell
 ```
 
-And then you get fully polymorphic accessors without having to write a single class (PointedIn, the class behind mpoint, is generic enough). And you can then rewrite the code as:
+And then you get fully polymorphic accessors without having to write a single class (PointableIn, the class behind mpoint, is generic enough). And you can then rewrite the code as:
 
 ```haskell
 readerAct x y = do z <- ask'
