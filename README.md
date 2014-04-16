@@ -1,14 +1,13 @@
 MonadPointer
 ============
 
-In the pure spirit of transformers, MonadPointer empowers use to
+In the pure spirit of transformers, MonadPointer empowers the user to
 
 - write functions that target a specific monad transformer of some stack without using mtl typeclasses;
 - run those functions against a stack without having to count the number of lifts to do. Just call mpoint and let the swathe of GHC type extensions work for you.
 
 It may require a bit of extra type hints, though.
 
-Here goes nothing:
 
 ```haskell
 test :: (StateT Int (ReaderT Double (ReaderT Double IO))) String
