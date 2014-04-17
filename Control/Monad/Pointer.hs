@@ -1,8 +1,8 @@
-{-# LANGUAGE DataKinds, ConstraintKinds #-}
+{-# LANGUAGE DataKinds, ConstraintKinds, TypeFamilies, ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Control.Monad.Pointer where
 
-import Control.Monad.Trans.Class
 import Control.Monad.IO.Class
 import Control.Applicative
 
@@ -11,7 +11,6 @@ import Control.Monad.Pointer.TypeFns
 
 import Control.Monad.Trans.State
 import Control.Monad.Trans.Reader
-import Data.Functor.Identity
 
 
 test :: (MTSet '[StateT Int, ReaderT Double] m, MonadIO m) => m String
@@ -20,8 +19,13 @@ test = do x <- mpoint $ helper 42
           liftIO $ print x
           return (show $ (x::Double) + fromIntegral (y::Int))
 
-helper :: (Num t, MA m) => t -> ReaderT t m t
+--this signature is not necessary, given the Double type hint in test
+--helper :: (MA m) => Double -> ReaderT Double m Double
 helper x = (*x) <$> ask
 
-x :: IO (String, Int)
-x = test <:: flip runStateT (3::Int) <:: flip runReaderT (10::Double) <:: flip runReaderT (1::Int)
+-- ^ If the type signature is removed, type checker will complain
+-- because it won't have the proof that downstack the 3 transformers
+-- required are not duplicated. The error message is a bit long &
+-- ugly, but this is what it means.
+exec :: IO (String, Int)
+exec = test <:: flip runStateT (3::Int) <:: flip runReaderT (10::Double) <:: flip runReaderT (1::Int)

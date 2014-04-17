@@ -8,7 +8,7 @@ type family MTSetGetConstraints
             cst (stack :: * -> *)
             (l :: [(* -> *) -> * -> *]) where
   MTSetGetConstraints cst stack (mt ': rest) =
-                                 MTSetGetConstraints (cst, PointableIn stack mt) stack rest
+                                 MTSetGetConstraints (cst, PointableIn (OnTopOf stack mt) stack mt) stack rest
   MTSetGetConstraints cst stack '[] = cst
 
 type MTSet (l :: [(* -> *) -> * -> *]) (stack :: * -> *) =
