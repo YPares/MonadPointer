@@ -8,8 +8,6 @@ MonadPointer aims at helping you
 
 Note it's a bit rough for now and will requires extra type hinting.
 
-BEWARE: I still have to update this README so it takes into account the new PointableIn class (changed to remove the need for OverlappingInstances).
-
 The idea is that functions like
 ```haskell
 readerAct :: Int -> Int -> Reader Int String
@@ -83,6 +81,9 @@ them. I'll try to add a MTList equivalent that will enforce an order between
 the transformers.
 
 As you can see, you cannot really do without type hints. But I still find it clearer than explicit lift (lift (lift ...))).
+
+
+BEWARE: The text beneath needs some rewriting!
 
 And if you _really_ can't stand the boilerplate introduced by mpoint, you may simply declare polymorphic variants of your stack-accessing functions:
 
