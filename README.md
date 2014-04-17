@@ -81,7 +81,7 @@ them. I'll try to add a MTList equivalent that will enforce an order between
 the transformers.
 Note MTSet requires UndecidableInstances for now.
 
-As you can see, you cannot really do without type hints, because of OverlappingInstances. But I still find it clearer than explicit lift (lift (lift ...))).
+As you can see, you cannot really do without type hints. But I still find it clearer than explicit lift (lift (lift ...))).
 
 And if you _really_ can't stand the boilerplate introduced by mpoint, you may simply declare polymorphic variants of your stack-accessing functions:
 
@@ -106,4 +106,7 @@ fn = do count <- readerAct
         tell' count
 ```
 
-The gotcha that remains is anyway already present in MTL: if you have twice the same monad transformer (e.g. if you have two ```ReaderT Double``` in the stack), then mpoint will address the uppermost. But I wouldn't consider good practise to have twice the same transformer, as it's not clear what each Reader is meant to be used for (you have newtypes for clarifying this).
+Note that conversely to MTL, MonadPointer does not rely on
+OverlappingInstances: it requires and proves statically that your
+monad stack won't for instance contain two StateT Int for instance, so
+there are no ambiguities in which transformer mpoint should address!
