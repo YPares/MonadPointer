@@ -7,7 +7,8 @@ import Data.Type.Equality
 
 
 type family (:&&) (a :: Bool) (b :: Bool) :: Bool where
-  True :&& True = True
+  True :&& a    = a
+  a    :&& True = a
   _a   :&& _b   = False
 
 type family Not (a :: Bool) :: Bool where

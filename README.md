@@ -80,7 +80,7 @@ Double, in whatever order and possibly with other transformers between
 them. I'll try to add a MTList equivalent that will enforce an order between
 the transformers.
 
-As you can see, you cannot really do without type hints. But I still find it clearer than explicit lift (lift (lift ...))).
+As you can see, you cannot really do without type hints. But I still find it clearer than explicit lift (lift (lift ...))). However, note that the test explicit type can be removed if you use NoMonomorphismRestriction (provided you leave the type hints at the last line of test in place).
 
 
 Note that conversely to MTL, MonadPointer does not rely on
