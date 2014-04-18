@@ -54,7 +54,7 @@ fn = do count <- lift (lift (lift readerAct))
         lift (lift (tell count))
 ```
 
-It is a bit ugly, and everytime you want to execute one action in your stack, you have to look at it to count the number of lifts you should insert. Cumbersome. MonadPointer allows you do just replace whatever amount of lifts by:
+It is a bit ugly, and everytime you want to execute one action in your stack, you have to look at it to count the number of lifts you should insert. Cumbersome. MonadPointer allows you to just replace whatever amount of lifts by:
 
 ```haskell
 fn = do count <- mpoint readerAct
