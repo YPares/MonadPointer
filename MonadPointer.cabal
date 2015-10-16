@@ -23,6 +23,6 @@ library
                        Data.List.TypeLevel
   -- other-modules:       
   other-extensions:    TypeOperators, KindSignatures, Rank2Types, FlexibleInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, OverlappingInstances, ScopedTypeVariables
-  build-depends:       base >=4.7 && <4.8, transformers >=0.3 && <0.4
+  build-depends:       base >=4.7, transformers >=0.3
   -- hs-source-dirs:      
   default-language:    Haskell2010
