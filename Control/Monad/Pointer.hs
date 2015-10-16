@@ -1,5 +1,5 @@
 {-# LANGUAGE DataKinds, ConstraintKinds, TypeFamilies, ScopedTypeVariables #-}
-{-# LANGUAGE RankNTypes, NoMonomorphismRestriction #-}
+{-# LANGUAGE RankNTypes, NoMonomorphismRestriction, FlexibleContexts #-}
 
 module Control.Monad.Pointer where
 
